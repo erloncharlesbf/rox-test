@@ -9,7 +9,6 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 use Knuckles\Scribe\Attributes\BodyParam;
 use Knuckles\Scribe\Attributes\Endpoint;
@@ -20,8 +19,9 @@ use Knuckles\Scribe\Attributes\Response;
 class AuthController extends Controller
 {
     public function __construct(
-        private readonly AuthService $authService
+        private readonly AuthService $authService, private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory
     ) {}
+
     #[Endpoint(
         title: 'Register a new user',
         description: 'Create a new user account with email and password. Returns the user data and an authentication token.'
@@ -36,7 +36,7 @@ class AuthController extends Controller
     {
         $result = $this->authService->register($request->validated());
 
-        return response()->json([
+        return $this->responseFactory->json([
             'message' => 'User registered successfully',
             'user' => [
                 'id' => $result['user']->id,
@@ -59,13 +59,13 @@ class AuthController extends Controller
     {
         $result = $this->authService->login($request->only('email', 'password'));
 
-        if (!$result) {
-            return response()->json([
+        if (! $result) {
+            return $this->responseFactory->json([
                 'message' => 'Invalid credentials',
             ], 401);
         }
 
-        return response()->json([
+        return $this->responseFactory->json([
             'message' => 'Login successful',
             'user' => [
                 'id' => $result['user']->id,
@@ -84,9 +84,9 @@ class AuthController extends Controller
     #[Response(['message' => 'Unauthenticated'], status: 401)]
     public function logout(): JsonResponse
     {
-        $this->authService->logout(Auth::user());
+        $this->authService->logout($this->authManager->user());
 
-        return response()->json([
+        return $this->responseFactory->json([
             'message' => 'Logged out successfully',
         ]);
     }
@@ -103,12 +103,12 @@ class AuthController extends Controller
         $status = $this->authService->sendPasswordResetLink($request->email);
 
         if ($status === Password::RESET_LINK_SENT) {
-            return response()->json([
+            return $this->responseFactory->json([
                 'message' => 'Password reset link sent to your email',
             ]);
         }
 
-        return response()->json([
+        return $this->responseFactory->json([
             'message' => 'Unable to send password reset link',
         ], 422);
     }
@@ -130,12 +130,12 @@ class AuthController extends Controller
         );
 
         if ($status === Password::PASSWORD_RESET) {
-            return response()->json([
+            return $this->responseFactory->json([
                 'message' => 'Password has been reset successfully',
             ]);
         }
 
-        return response()->json([
+        return $this->responseFactory->json([
             'message' => 'Invalid or expired token',
         ], 422);
     }

@@ -9,9 +9,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 abstract class BaseRepository implements BaseRepositoryInterface
 {
-    public function __construct(protected Model $model)
-    {
-    }
+    public function __construct(protected Model $model) {}
 
     public function all(): Collection
     {
@@ -49,7 +47,7 @@ abstract class BaseRepository implements BaseRepositoryInterface
     {
         $model = $this->find($id);
 
-        if (!$model instanceof \Illuminate\Database\Eloquent\Model) {
+        if (! $model instanceof \Illuminate\Database\Eloquent\Model) {
             return false;
         }
 
@@ -60,7 +58,7 @@ abstract class BaseRepository implements BaseRepositoryInterface
     {
         $model = $this->find($id);
 
-        if (!$model instanceof \Illuminate\Database\Eloquent\Model) {
+        if (! $model instanceof \Illuminate\Database\Eloquent\Model) {
             return false;
         }
 

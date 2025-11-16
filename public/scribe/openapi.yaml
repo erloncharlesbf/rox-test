@@ -1,0 +1,868 @@
+openapi: 3.0.3
+info:
+  title: 'Laravel API Documentation'
+  description: 'Complete API documentation for managing Books and Movies with CRUD operations, file uploads, and advanced filtering capabilities.'
+  version: 1.0.0
+servers:
+  -
+    url: 'https://rox-test.test'
+tags:
+  -
+    name: Authentication
+    description: 'APIs for user authentication, registration, and password management. These endpoints handle user access control and account security.'
+  -
+    name: 'Books Management'
+    description: 'APIs for managing books in your digital library. All endpoints support full CRUD operations with advanced filtering and pagination.'
+  -
+    name: 'Movies Management'
+    description: 'APIs for managing movies in your collection. All endpoints support full CRUD operations with advanced filtering and pagination.'
+paths:
+  /api/register:
+    post:
+      summary: 'Register a new user'
+      operationId: registerANewUser
+      description: 'Create a new user account with email and password. Returns the user data and an authentication token.'
+      parameters: []
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'User registered successfully'
+                  user:
+                    id: 1
+                    name: 'John Doe'
+                    email: john@example.com
+                  token: your-api-token
+                properties:
+                  message:
+                    type: string
+                    example: 'User registered successfully'
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 'John Doe'
+                      email:
+                        type: string
+                        example: john@example.com
+                  token:
+                    type: string
+                    example: your-api-token
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Validation failed'
+                  errors:
+                    email:
+                      - 'This email is already registered.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Validation failed'
+                  errors:
+                    type: object
+                    properties:
+                      email:
+                        type: array
+                        example:
+                          - 'This email is already registered.'
+                        items:
+                          type: string
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: "The user's full name"
+                  example: 'John Doe'
+                  nullable: false
+                email:
+                  type: string
+                  description: "The user's email address (must be unique)"
+                  example: john@example.com
+                  nullable: false
+                password:
+                  type: string
+                  description: 'The password (minimum 8 characters)'
+                  example: password123
+                  nullable: false
+                password_confirmation:
+                  type: string
+                  description: 'Password confirmation (must match password)'
+                  example: password123
+                  nullable: false
+              required:
+                - name
+                - email
+                - password
+                - password_confirmation
+      security: []
+  /api/login:
+    post:
+      summary: 'Login user'
+      operationId: loginUser
+      description: 'Authenticate a user with email and password. Returns user data and an authentication token on success.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Login successful'
+                  user:
+                    id: 1
+                    name: 'John Doe'
+                    email: john@example.com
+                  token: your-api-token
+                properties:
+                  message:
+                    type: string
+                    example: 'Login successful'
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 'John Doe'
+                      email:
+                        type: string
+                        example: john@example.com
+                  token:
+                    type: string
+                    example: your-api-token
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Invalid credentials'
+                properties:
+                  message:
+                    type: string
+                    example: 'Invalid credentials'
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: "The user's email address"
+                  example: john@example.com
+                  nullable: false
+                password:
+                  type: string
+                  description: "The user's password"
+                  example: password123
+                  nullable: false
+              required:
+                - email
+                - password
+      security: []
+  /api/forgot-password:
+    post:
+      summary: 'Request password reset'
+      operationId: requestPasswordReset
+      description: "Send a password reset link to the user's email address. The email will contain a token to reset the password."
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Password reset link sent to your email'
+                properties:
+                  message:
+                    type: string
+                    example: 'Password reset link sent to your email'
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'We could not find a user with that email address.'
+                properties:
+                  message:
+                    type: string
+                    example: 'We could not find a user with that email address.'
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: "The user's registered email address"
+                  example: john@example.com
+                  nullable: false
+              required:
+                - email
+      security: []
+  /api/reset-password:
+    post:
+      summary: 'Reset password'
+      operationId: resetPassword
+      description: 'Reset user password using the token received via email. The token is sent when requesting a password reset.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Password has been reset successfully'
+                properties:
+                  message:
+                    type: string
+                    example: 'Password has been reset successfully'
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Invalid or expired token'
+                properties:
+                  message:
+                    type: string
+                    example: 'Invalid or expired token'
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: 'The password reset token from email'
+                  example: abc123xyz
+                  nullable: false
+                email:
+                  type: string
+                  description: "The user's email address"
+                  example: john@example.com
+                  nullable: false
+                password:
+                  type: string
+                  description: 'The new password (minimum 8 characters)'
+                  example: newpassword123
+                  nullable: false
+                password_confirmation:
+                  type: string
+                  description: 'Password confirmation (must match password)'
+                  example: newpassword123
+                  nullable: false
+              required:
+                - token
+                - email
+                - password
+                - password_confirmation
+      security: []
+  /api/logout:
+    post:
+      summary: 'Logout user'
+      operationId: logoutUser
+      description: "Revoke the current user's authentication token. Requires authentication."
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Logged out successfully'
+                properties:
+                  message:
+                    type: string
+                    example: 'Logged out successfully'
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated
+      tags:
+        - Authentication
+      security: []
+  /api/books:
+    post:
+      summary: 'Create a new book'
+      operationId: createANewBook
+      description: 'Add a new book to the library with all its details. Optionally upload a cover image (max 2MB, formats: jpeg, png, jpg, gif, webp).'
+      parameters: []
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Book created successfully'
+                  data:
+                    id: 1
+                    title: 'The Great Gatsby'
+                    author: 'F. Scott Fitzgerald'
+                properties:
+                  message:
+                    type: string
+                    example: 'Book created successfully'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      title:
+                        type: string
+                        example: 'The Great Gatsby'
+                      author:
+                        type: string
+                        example: 'F. Scott Fitzgerald'
+      tags:
+        - 'Books Management'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: 'The title of the book'
+                  example: 'The Great Gatsby'
+                  nullable: false
+                author:
+                  type: string
+                  description: 'The name of the book author'
+                  example: 'F. Scott Fitzgerald'
+                  nullable: false
+                isbn:
+                  type: string
+                  description: 'Unique ISBN-13 identifier for the book'
+                  example: 978-0-7432-7356-5
+                  nullable: false
+                description:
+                  type: string
+                  description: 'A brief description or synopsis of the book'
+                  example: 'A story of decadence and excess...'
+                  nullable: false
+                publisher:
+                  type: string
+                  description: 'The name of the publisher'
+                  example: Scribner
+                  nullable: false
+                publication_date:
+                  type: string
+                  description: 'Date when the book was published (YYYY-MM-DD)'
+                  example: '1925-04-10'
+                  nullable: false
+                language:
+                  type: string
+                  description: 'Two-letter ISO language code'
+                  example: en
+                  nullable: false
+                pages:
+                  type: integer
+                  description: 'Total number of pages in the book'
+                  example: 180
+                  nullable: false
+                genre:
+                  type: string
+                  description: 'The literary genre or category'
+                  example: Fiction
+                  nullable: false
+                price:
+                  type: number
+                  description: 'The price of the book in USD'
+                  example: 15.99
+                  nullable: false
+                status:
+                  type: string
+                  description: 'Current availability status: available, unavailable, or coming_soon'
+                  example: available
+                  nullable: false
+                cover:
+                  type: string
+                  format: binary
+                  description: 'Cover image file (max 2MB, jpeg/png/jpg/gif/webp)'
+                  nullable: false
+              required:
+                - title
+                - author
+                - isbn
+                - status
+      security: []
+  '/api/books/{id}':
+    put:
+      summary: 'Update book information'
+      operationId: updateBookInformation
+      description: 'Update one or more fields of an existing book. All fields are optional. If a new cover image is provided, the old one will be replaced.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Book updated successfully'
+                  data:
+                    id: 1
+                    title: 'Updated Title'
+                properties:
+                  message:
+                    type: string
+                    example: 'Book updated successfully'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      title:
+                        type: string
+                        example: 'Updated Title'
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Book not found'
+                properties:
+                  message:
+                    type: string
+                    example: 'Book not found'
+      tags:
+        - 'Books Management'
+      requestBody:
+        required: false
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: 'The title of the book'
+                  example: 'The Great Gatsby'
+                  nullable: false
+                author:
+                  type: string
+                  description: 'The name of the book author'
+                  example: 'F. Scott Fitzgerald'
+                  nullable: false
+                isbn:
+                  type: string
+                  description: 'Unique ISBN-13 identifier (must be unique)'
+                  example: 978-0-7432-7356-5
+                  nullable: false
+                description:
+                  type: string
+                  description: 'A brief description or synopsis of the book'
+                  example: 'Eius et animi quos velit et.'
+                  nullable: false
+                publisher:
+                  type: string
+                  description: 'The name of the publisher'
+                  example: Scribner
+                  nullable: false
+                publication_date:
+                  type: string
+                  description: 'Date when the book was published (YYYY-MM-DD)'
+                  example: '1925-04-10'
+                  nullable: false
+                language:
+                  type: string
+                  description: 'Two-letter ISO language code'
+                  example: en
+                  nullable: false
+                pages:
+                  type: integer
+                  description: 'Total number of pages in the book'
+                  example: 180
+                  nullable: false
+                genre:
+                  type: string
+                  description: 'The literary genre or category'
+                  example: Fiction
+                  nullable: false
+                price:
+                  type: number
+                  description: 'The price of the book in USD'
+                  example: 15.99
+                  nullable: false
+                status:
+                  type: string
+                  description: 'Current availability status'
+                  example: available
+                  nullable: false
+                cover:
+                  type: string
+                  format: binary
+                  description: 'New cover image file (replaces existing)'
+                  nullable: false
+      security: []
+    delete:
+      summary: 'Delete a book'
+      operationId: deleteABook
+      description: 'Permanently remove a book from the library. This operation uses soft delete, so the book can be restored if needed. Any associated cover image will also be deleted.'
+      parameters: []
+      responses:
+        204:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Book deleted successfully'
+                properties:
+                  message:
+                    type: string
+                    example: 'Book deleted successfully'
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Book not found'
+                properties:
+                  message:
+                    type: string
+                    example: 'Book not found'
+      tags:
+        - 'Books Management'
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the book.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+  /api/movies:
+    post:
+      summary: 'Create a new movie'
+      operationId: createANewMovie
+      description: 'Add a new movie to the collection with all its details. Optionally upload a cover image (max 2MB, formats: jpeg, png, jpg, gif, webp).'
+      parameters: []
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Movie created successfully'
+                  data:
+                    id: 1
+                    title: 'The Godfather'
+                    director: 'Francis Ford Coppola'
+                properties:
+                  message:
+                    type: string
+                    example: 'Movie created successfully'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      title:
+                        type: string
+                        example: 'The Godfather'
+                      director:
+                        type: string
+                        example: 'Francis Ford Coppola'
+      tags:
+        - 'Movies Management'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: 'The title of the movie'
+                  example: 'The Godfather'
+                  nullable: false
+                director:
+                  type: string
+                  description: 'The name of the movie director'
+                  example: 'Francis Ford Coppola'
+                  nullable: false
+                description:
+                  type: string
+                  description: 'A brief description or synopsis of the movie'
+                  example: 'The aging patriarch of an organized crime dynasty...'
+                  nullable: false
+                studio:
+                  type: string
+                  description: 'The name of the production studio'
+                  example: 'Paramount Pictures'
+                  nullable: false
+                release_date:
+                  type: string
+                  description: 'Date when the movie was released (YYYY-MM-DD)'
+                  example: '1972-03-24'
+                  nullable: false
+                language:
+                  type: string
+                  description: 'Two-letter ISO language code'
+                  example: en
+                  nullable: false
+                duration:
+                  type: integer
+                  description: 'Duration of the movie in minutes'
+                  example: 175
+                  nullable: false
+                genre:
+                  type: string
+                  description: 'The movie genre or category'
+                  example: Crime
+                  nullable: false
+                rating:
+                  type: number
+                  description: 'Movie rating (0.0 to 10.0)'
+                  example: 9.2
+                  nullable: false
+                price:
+                  type: number
+                  description: 'The price of the movie in USD'
+                  example: 12.99
+                  nullable: false
+                status:
+                  type: string
+                  description: 'Current availability status: available, unavailable, or coming_soon'
+                  example: available
+                  nullable: false
+                cover:
+                  type: string
+                  format: binary
+                  description: 'Cover/poster image file (max 2MB, jpeg/png/jpg/gif/webp)'
+                  nullable: false
+              required:
+                - title
+                - director
+                - status
+      security: []
+  '/api/movies/{id}':
+    put:
+      summary: 'Update movie information'
+      operationId: updateMovieInformation
+      description: 'Update one or more fields of an existing movie. All fields are optional. If a new cover image is provided, the old one will be replaced.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Movie updated successfully'
+                  data:
+                    id: 1
+                    title: 'Updated Title'
+                properties:
+                  message:
+                    type: string
+                    example: 'Movie updated successfully'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      title:
+                        type: string
+                        example: 'Updated Title'
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Movie not found'
+                properties:
+                  message:
+                    type: string
+                    example: 'Movie not found'
+      tags:
+        - 'Movies Management'
+      requestBody:
+        required: false
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: 'The title of the movie'
+                  example: 'The Godfather'
+                  nullable: false
+                director:
+                  type: string
+                  description: 'The name of the movie director'
+                  example: 'Francis Ford Coppola'
+                  nullable: false
+                description:
+                  type: string
+                  description: 'A brief description or synopsis of the movie'
+                  example: 'Eius et animi quos velit et.'
+                  nullable: false
+                studio:
+                  type: string
+                  description: 'The name of the production studio'
+                  example: 'Paramount Pictures'
+                  nullable: false
+                release_date:
+                  type: string
+                  description: 'Date when the movie was released (YYYY-MM-DD)'
+                  example: '1972-03-24'
+                  nullable: false
+                language:
+                  type: string
+                  description: 'Two-letter ISO language code'
+                  example: en
+                  nullable: false
+                duration:
+                  type: integer
+                  description: 'Duration of the movie in minutes'
+                  example: 175
+                  nullable: false
+                genre:
+                  type: string
+                  description: 'The movie genre or category'
+                  example: Crime
+                  nullable: false
+                rating:
+                  type: number
+                  description: 'Movie rating (0.0 to 10.0)'
+                  example: 9.2
+                  nullable: false
+                price:
+                  type: number
+                  description: 'The price of the movie in USD'
+                  example: 12.99
+                  nullable: false
+                status:
+                  type: string
+                  description: 'Current availability status'
+                  example: available
+                  nullable: false
+                cover:
+                  type: string
+                  format: binary
+                  description: 'New cover/poster image file (replaces existing)'
+                  nullable: false
+      security: []
+    delete:
+      summary: 'Delete a movie'
+      operationId: deleteAMovie
+      description: 'Permanently remove a movie from the collection. This operation uses soft delete, so the movie can be restored if needed. Any associated cover image will also be deleted.'
+      parameters: []
+      responses:
+        204:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Movie deleted successfully'
+                properties:
+                  message:
+                    type: string
+                    example: 'Movie deleted successfully'
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Movie not found'
+                properties:
+                  message:
+                    type: string
+                    example: 'Movie not found'
+      tags:
+        - 'Movies Management'
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the movie.'
+        example: 16
+        required: true
+        schema:
+          type: integer

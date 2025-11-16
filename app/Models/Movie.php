@@ -26,16 +26,23 @@ class Movie extends Model
         'status',
     ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany<\App\Models\Attachment, $this>
+     */
     public function attachments(): MorphMany
     {
         return $this->morphMany(Attachment::class, 'attachable');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\MorphOne<\App\Models\Attachment, $this>
+     */
     public function cover(): MorphOne
     {
         return $this->morphOne(Attachment::class, 'attachable')
             ->where('type', 'cover');
     }
+
     protected function casts(): array
     {
         return [

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Attachment extends Model
 {
+    use \Illuminate\Database\Eloquent\Factories\HasFactory;
+
     protected $fillable = [
         'attachable_type',
         'attachable_id',
@@ -21,6 +23,7 @@ class Attachment extends Model
     {
         return $this->morphTo();
     }
+
     protected function casts(): array
     {
         return [

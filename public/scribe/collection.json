@@ -1,0 +1,833 @@
+{
+    "variable": [
+        {
+            "id": "baseUrl",
+            "key": "baseUrl",
+            "type": "string",
+            "name": "string",
+            "value": "https:\/\/rox-test.test"
+        }
+    ],
+    "info": {
+        "name": "Laravel API Documentation",
+        "_postman_id": "8289999a-cb7b-435b-a61d-e9fcbc726415",
+        "description": "Complete API documentation for managing Books and Movies with CRUD operations, file uploads, and advanced filtering capabilities.",
+        "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
+    },
+    "item": [
+        {
+            "name": "Authentication",
+            "description": "APIs for user authentication, registration, and password management. These endpoints handle user access control and account security.",
+            "item": [
+                {
+                    "name": "Register a new user",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/register",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/register"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"John Doe\",\"email\":\"john@example.com\",\"password\":\"password123\",\"password_confirmation\":\"password123\"}"
+                        },
+                        "description": "Create a new user account with email and password. Returns the user data and an authentication token.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\"message\":\"User registered successfully\",\"user\":{\"id\":1,\"name\":\"John Doe\",\"email\":\"john@example.com\"},\"token\":\"your-api-token\"}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"Validation failed\",\"errors\":{\"email\":[\"This email is already registered.\"]}}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Login user",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/login",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/login"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"john@example.com\",\"password\":\"password123\"}"
+                        },
+                        "description": "Authenticate a user with email and password. Returns user data and an authentication token on success.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"message\":\"Login successful\",\"user\":{\"id\":1,\"name\":\"John Doe\",\"email\":\"john@example.com\"},\"token\":\"your-api-token\"}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"Invalid credentials\"}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Request password reset",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/forgot-password",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/forgot-password"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"john@example.com\"}"
+                        },
+                        "description": "Send a password reset link to the user's email address. The email will contain a token to reset the password.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"message\":\"Password reset link sent to your email\"}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"We could not find a user with that email address.\"}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Reset password",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/reset-password",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/reset-password"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"token\":\"abc123xyz\",\"email\":\"john@example.com\",\"password\":\"newpassword123\",\"password_confirmation\":\"newpassword123\"}"
+                        },
+                        "description": "Reset user password using the token received via email. The token is sent when requesting a password reset.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"message\":\"Password has been reset successfully\"}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"Invalid or expired token\"}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Logout user",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/logout",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/logout"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Revoke the current user's authentication token. Requires authentication.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"message\":\"Logged out successfully\"}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"Unauthenticated\"}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Books Management",
+            "description": "APIs for managing books in your digital library. All endpoints support full CRUD operations with advanced filtering and pagination.",
+            "item": [
+                {
+                    "name": "Create a new book",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/books",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/books"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "multipart\/form-data"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "title",
+                                    "value": "The Great Gatsby",
+                                    "type": "text",
+                                    "description": "The title of the book"
+                                },
+                                {
+                                    "key": "author",
+                                    "value": "F. Scott Fitzgerald",
+                                    "type": "text",
+                                    "description": "The name of the book author"
+                                },
+                                {
+                                    "key": "isbn",
+                                    "value": "978-0-7432-7356-5",
+                                    "type": "text",
+                                    "description": "Unique ISBN-13 identifier for the book"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "A story of decadence and excess...",
+                                    "type": "text",
+                                    "description": "A brief description or synopsis of the book"
+                                },
+                                {
+                                    "key": "publisher",
+                                    "value": "Scribner",
+                                    "type": "text",
+                                    "description": "The name of the publisher"
+                                },
+                                {
+                                    "key": "publication_date",
+                                    "value": "1925-04-10",
+                                    "type": "text",
+                                    "description": "Date when the book was published (YYYY-MM-DD)"
+                                },
+                                {
+                                    "key": "language",
+                                    "value": "en",
+                                    "type": "text",
+                                    "description": "Two-letter ISO language code"
+                                },
+                                {
+                                    "key": "pages",
+                                    "value": "180",
+                                    "type": "text",
+                                    "description": "Total number of pages in the book"
+                                },
+                                {
+                                    "key": "genre",
+                                    "value": "Fiction",
+                                    "type": "text",
+                                    "description": "The literary genre or category"
+                                },
+                                {
+                                    "key": "price",
+                                    "value": "15.99",
+                                    "type": "text",
+                                    "description": "The price of the book in USD"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "available",
+                                    "type": "text",
+                                    "description": "Current availability status: available, unavailable, or coming_soon"
+                                },
+                                {
+                                    "key": "cover",
+                                    "src": [],
+                                    "type": "file"
+                                }
+                            ]
+                        },
+                        "description": "Add a new book to the library with all its details. Optionally upload a cover image (max 2MB, formats: jpeg, png, jpg, gif, webp).",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\"message\":\"Book created successfully\",\"data\":{\"id\":1,\"title\":\"The Great Gatsby\",\"author\":\"F. Scott Fitzgerald\"}}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Update book information",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/books\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/books\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "16",
+                                    "description": "The ID of the book."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "multipart\/form-data"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "title",
+                                    "value": "The Great Gatsby",
+                                    "type": "text",
+                                    "description": "The title of the book"
+                                },
+                                {
+                                    "key": "author",
+                                    "value": "F. Scott Fitzgerald",
+                                    "type": "text",
+                                    "description": "The name of the book author"
+                                },
+                                {
+                                    "key": "isbn",
+                                    "value": "978-0-7432-7356-5",
+                                    "type": "text",
+                                    "description": "Unique ISBN-13 identifier (must be unique)"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "Eius et animi quos velit et.",
+                                    "type": "text",
+                                    "description": "A brief description or synopsis of the book"
+                                },
+                                {
+                                    "key": "publisher",
+                                    "value": "Scribner",
+                                    "type": "text",
+                                    "description": "The name of the publisher"
+                                },
+                                {
+                                    "key": "publication_date",
+                                    "value": "1925-04-10",
+                                    "type": "text",
+                                    "description": "Date when the book was published (YYYY-MM-DD)"
+                                },
+                                {
+                                    "key": "language",
+                                    "value": "en",
+                                    "type": "text",
+                                    "description": "Two-letter ISO language code"
+                                },
+                                {
+                                    "key": "pages",
+                                    "value": "180",
+                                    "type": "text",
+                                    "description": "Total number of pages in the book"
+                                },
+                                {
+                                    "key": "genre",
+                                    "value": "Fiction",
+                                    "type": "text",
+                                    "description": "The literary genre or category"
+                                },
+                                {
+                                    "key": "price",
+                                    "value": "15.99",
+                                    "type": "text",
+                                    "description": "The price of the book in USD"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "available",
+                                    "type": "text",
+                                    "description": "Current availability status"
+                                },
+                                {
+                                    "key": "cover",
+                                    "src": [],
+                                    "type": "file"
+                                },
+                                {
+                                    "key": "_method",
+                                    "value": "PUT",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "description": "Update one or more fields of an existing book. All fields are optional. If a new cover image is provided, the old one will be replaced.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"message\":\"Book updated successfully\",\"data\":{\"id\":1,\"title\":\"Updated Title\"}}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\":\"Book not found\"}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Delete a book",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/books\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/books\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "16",
+                                    "description": "The ID of the book."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Permanently remove a book from the library. This operation uses soft delete, so the book can be restored if needed. Any associated cover image will also be deleted.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 204,
+                            "body": "{\"message\":\"Book deleted successfully\"}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\":\"Book not found\"}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Movies Management",
+            "description": "APIs for managing movies in your collection. All endpoints support full CRUD operations with advanced filtering and pagination.",
+            "item": [
+                {
+                    "name": "Create a new movie",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/movies",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/movies"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "multipart\/form-data"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "title",
+                                    "value": "The Godfather",
+                                    "type": "text",
+                                    "description": "The title of the movie"
+                                },
+                                {
+                                    "key": "director",
+                                    "value": "Francis Ford Coppola",
+                                    "type": "text",
+                                    "description": "The name of the movie director"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "The aging patriarch of an organized crime dynasty...",
+                                    "type": "text",
+                                    "description": "A brief description or synopsis of the movie"
+                                },
+                                {
+                                    "key": "studio",
+                                    "value": "Paramount Pictures",
+                                    "type": "text",
+                                    "description": "The name of the production studio"
+                                },
+                                {
+                                    "key": "release_date",
+                                    "value": "1972-03-24",
+                                    "type": "text",
+                                    "description": "Date when the movie was released (YYYY-MM-DD)"
+                                },
+                                {
+                                    "key": "language",
+                                    "value": "en",
+                                    "type": "text",
+                                    "description": "Two-letter ISO language code"
+                                },
+                                {
+                                    "key": "duration",
+                                    "value": "175",
+                                    "type": "text",
+                                    "description": "Duration of the movie in minutes"
+                                },
+                                {
+                                    "key": "genre",
+                                    "value": "Crime",
+                                    "type": "text",
+                                    "description": "The movie genre or category"
+                                },
+                                {
+                                    "key": "rating",
+                                    "value": "9.2",
+                                    "type": "text",
+                                    "description": "Movie rating (0.0 to 10.0)"
+                                },
+                                {
+                                    "key": "price",
+                                    "value": "12.99",
+                                    "type": "text",
+                                    "description": "The price of the movie in USD"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "available",
+                                    "type": "text",
+                                    "description": "Current availability status: available, unavailable, or coming_soon"
+                                },
+                                {
+                                    "key": "cover",
+                                    "src": [],
+                                    "type": "file"
+                                }
+                            ]
+                        },
+                        "description": "Add a new movie to the collection with all its details. Optionally upload a cover image (max 2MB, formats: jpeg, png, jpg, gif, webp).",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\"message\":\"Movie created successfully\",\"data\":{\"id\":1,\"title\":\"The Godfather\",\"director\":\"Francis Ford Coppola\"}}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Update movie information",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/movies\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/movies\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "16",
+                                    "description": "The ID of the movie."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "multipart\/form-data"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "title",
+                                    "value": "The Godfather",
+                                    "type": "text",
+                                    "description": "The title of the movie"
+                                },
+                                {
+                                    "key": "director",
+                                    "value": "Francis Ford Coppola",
+                                    "type": "text",
+                                    "description": "The name of the movie director"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "Eius et animi quos velit et.",
+                                    "type": "text",
+                                    "description": "A brief description or synopsis of the movie"
+                                },
+                                {
+                                    "key": "studio",
+                                    "value": "Paramount Pictures",
+                                    "type": "text",
+                                    "description": "The name of the production studio"
+                                },
+                                {
+                                    "key": "release_date",
+                                    "value": "1972-03-24",
+                                    "type": "text",
+                                    "description": "Date when the movie was released (YYYY-MM-DD)"
+                                },
+                                {
+                                    "key": "language",
+                                    "value": "en",
+                                    "type": "text",
+                                    "description": "Two-letter ISO language code"
+                                },
+                                {
+                                    "key": "duration",
+                                    "value": "175",
+                                    "type": "text",
+                                    "description": "Duration of the movie in minutes"
+                                },
+                                {
+                                    "key": "genre",
+                                    "value": "Crime",
+                                    "type": "text",
+                                    "description": "The movie genre or category"
+                                },
+                                {
+                                    "key": "rating",
+                                    "value": "9.2",
+                                    "type": "text",
+                                    "description": "Movie rating (0.0 to 10.0)"
+                                },
+                                {
+                                    "key": "price",
+                                    "value": "12.99",
+                                    "type": "text",
+                                    "description": "The price of the movie in USD"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "available",
+                                    "type": "text",
+                                    "description": "Current availability status"
+                                },
+                                {
+                                    "key": "cover",
+                                    "src": [],
+                                    "type": "file"
+                                },
+                                {
+                                    "key": "_method",
+                                    "value": "PUT",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "description": "Update one or more fields of an existing movie. All fields are optional. If a new cover image is provided, the old one will be replaced.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"message\":\"Movie updated successfully\",\"data\":{\"id\":1,\"title\":\"Updated Title\"}}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\":\"Movie not found\"}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Delete a movie",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/movies\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/movies\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "16",
+                                    "description": "The ID of the movie."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Permanently remove a movie from the collection. This operation uses soft delete, so the movie can be restored if needed. Any associated cover image will also be deleted.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 204,
+                            "body": "{\"message\":\"Movie deleted successfully\"}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\":\"Movie not found\"}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "auth": {
+        "type": "noauth"
+    }
+}

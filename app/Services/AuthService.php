@@ -4,24 +4,20 @@ namespace App\Services;
 
 use App\Contracts\Repositories\UserRepositoryInterface;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
 
 class AuthService
 {
     public function __construct(
-        private readonly UserRepositoryInterface $userRepository
+        private readonly UserRepositoryInterface $userRepository, private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Contracts\Hashing\Hasher $hasher, private readonly \Illuminate\Auth\AuthManager $authManager, private readonly \Illuminate\Auth\Passwords\PasswordBrokerManager $passwordBrokerManager
     ) {}
 
     public function register(array $data): array
     {
-        return DB::transaction(function () use ($data) {
+        return $this->databaseManager->transaction(function () use ($data): array {
             $user = $this->userRepository->createUser([
                 'name' => $data['name'],
                 'email' => $data['email'],
-                'password' => Hash::make($data['password']),
+                'password' => $this->hasher->make($data['password']),
             ]);
 
             $token = $user->createToken('auth-token')->plainTextToken;
@@ -35,11 +31,11 @@ class AuthService
 
     public function login(array $credentials): ?array
     {
-        if (!Auth::attempt($credentials)) {
+        if (! $this->authManager->attempt($credentials)) {
             return null;
         }
 
-        $user = Auth::user();
+        $user = $this->authManager->user();
         $token = $user->createToken('auth-token')->plainTextToken;
 
         return [
@@ -55,17 +51,14 @@ class AuthService
 
     public function sendPasswordResetLink(string $email): string
     {
-        return Password::sendResetLink(['email' => $email]);
+        return $this->passwordBrokerManager->sendResetLink(['email' => $email]);
     }
 
     public function resetPassword(array $data): string
     {
-        return Password::reset(
-            $data,
-            function ($user, $password) {
-                $this->userRepository->updatePassword($user, Hash::make($password));
-                $user->tokens()->delete();
-            }
-        );
+        return $this->passwordBrokerManager->reset($data, function (\App\Models\User $user, $password): void {
+            $this->userRepository->updatePassword($user, $this->hasher->make($password));
+            $user->tokens()->delete();
+        });
     }
 }

@@ -21,7 +21,7 @@ use Knuckles\Scribe\Attributes\ResponseFromApiResource;
 class MovieController extends Controller
 {
     public function __construct(
-        private readonly MovieService $movieService
+        private readonly MovieService $movieService, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory
     ) {}
 
     #[Endpoint(
@@ -42,7 +42,7 @@ class MovieController extends Controller
 
         $movies = $this->movieService->paginateMovies($perPage, $filters);
 
-        return response()->json([
+        return $this->responseFactory->json([
             'data' => MovieResource::collection($movies->load('cover')),
             'meta' => [
                 'current_page' => $movies->currentPage(),
@@ -74,7 +74,7 @@ class MovieController extends Controller
     {
         $movie = $this->movieService->createMovie($request->validated());
 
-        return response()->json([
+        return $this->responseFactory->json([
             'message' => 'Movie created successfully',
             'data' => new MovieResource($movie),
         ], 201);
@@ -88,7 +88,7 @@ class MovieController extends Controller
     #[Response(['message' => 'Movie not found'], status: 404)]
     public function show(Movie $movie): JsonResponse
     {
-        return response()->json([
+        return $this->responseFactory->json([
             'data' => new MovieResource($movie->load('cover')),
         ]);
     }
@@ -115,7 +115,7 @@ class MovieController extends Controller
     {
         $updatedMovie = $this->movieService->updateMovie($movie, $request->validated());
 
-        return response()->json([
+        return $this->responseFactory->json([
             'message' => 'Movie updated successfully',
             'data' => new MovieResource($updatedMovie),
         ]);
@@ -131,7 +131,7 @@ class MovieController extends Controller
     {
         $this->movieService->deleteMovie($movie);
 
-        return response()->json([
+        return $this->responseFactory->json([
             'message' => 'Movie deleted successfully',
         ], 204);
     }

@@ -6,13 +6,11 @@ use App\Contracts\Repositories\MovieRepositoryInterface;
 use App\Models\Movie;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class MovieService
 {
     public function __construct(
-        private readonly MovieRepositoryInterface $movieRepository
+        private readonly MovieRepositoryInterface $movieRepository, private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Filesystem\FilesystemManager $filesystemManager
     ) {}
 
     public function getAllMovies(): Collection
@@ -32,7 +30,7 @@ class MovieService
 
     public function createMovie(array $data): Movie
     {
-        return DB::transaction(function () use ($data) {
+        return $this->databaseManager->transaction(function () use ($data) {
             $coverFile = $data['cover'] ?? null;
             unset($data['cover']);
 
@@ -48,7 +46,7 @@ class MovieService
 
     public function updateMovie(Movie $movie, array $data): Movie
     {
-        return DB::transaction(function () use ($movie, $data) {
+        return $this->databaseManager->transaction(function () use ($movie, $data) {
             $coverFile = $data['cover'] ?? null;
             unset($data['cover']);
 
@@ -56,7 +54,7 @@ class MovieService
 
             if ($coverFile) {
                 if ($movie->cover) {
-                    Storage::disk('public')->delete($movie->cover->file_path);
+                    $this->filesystemManager->disk('public')->delete($movie->cover->file_path);
                     $movie->cover->delete();
                 }
 
@@ -69,9 +67,9 @@ class MovieService
 
     public function deleteMovie(Movie $movie): bool
     {
-        return DB::transaction(function () use ($movie) {
+        return $this->databaseManager->transaction(function () use ($movie) {
             if ($movie->cover) {
-                Storage::disk('public')->delete($movie->cover->file_path);
+                $this->filesystemManager->disk('public')->delete($movie->cover->file_path);
             }
 
             return $movie->delete();

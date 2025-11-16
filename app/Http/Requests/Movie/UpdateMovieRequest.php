@@ -6,26 +6,40 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateMovieRequest extends FormRequest
 {
+    /**
+     * @param  array  $query  The GET parameters
+     * @param  array  $request  The POST parameters
+     * @param  array  $attributes  The request attributes (parameters parsed from the PATH_INFO, ...)
+     * @param  array  $cookies  The COOKIE parameters
+     * @param  array  $files  The FILES parameters
+     * @param  array  $server  The SERVER parameters
+     * @param  string|resource|null  $content  The raw body data
+     */
+    public function __construct(array $query = [], array $request = [], array $attributes = [], array $cookies = [], array $files = [], array $server = [], $content = null, private readonly ?\Illuminate\Contracts\Auth\Guard $guard = null)
+    {
+        parent::__construct($query, $request, $attributes, $cookies, $files, $server, $content);
+    }
+
     public function authorize(): bool
     {
-        return auth()->check();
+        return $this->guard->check();
     }
 
     public function rules(): array
     {
         return [
-            'title' => 'sometimes|required|string|max:255',
-            'director' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
-            'studio' => 'nullable|string|max:255',
-            'release_date' => 'nullable|date',
-            'language' => 'nullable|string|max:10',
-            'duration' => 'nullable|integer|min:1',
-            'genre' => 'nullable|string|max:255',
-            'rating' => 'nullable|numeric|min:0|max:10',
-            'price' => 'nullable|numeric|min:0',
-            'status' => 'sometimes|required|in:available,unavailable,coming_soon',
-            'cover' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'title' => ['sometimes', 'required', 'string', 'max:255'],
+            'director' => ['sometimes', 'required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'studio' => ['nullable', 'string', 'max:255'],
+            'release_date' => ['nullable', 'date'],
+            'language' => ['nullable', 'string', 'max:10'],
+            'duration' => ['nullable', 'integer', 'min:1'],
+            'genre' => ['nullable', 'string', 'max:255'],
+            'rating' => ['nullable', 'numeric', 'min:0', 'max:10'],
+            'price' => ['nullable', 'numeric', 'min:0'],
+            'status' => ['sometimes', 'required', 'in:available,unavailable,coming_soon'],
+            'cover' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
         ];
     }
 

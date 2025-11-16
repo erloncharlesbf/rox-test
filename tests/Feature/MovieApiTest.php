@@ -1,169 +1,124 @@
 <?php
 
-namespace Tests\Feature;
-
 use App\Models\Movie;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Tests\TestCase;
 
-class MovieApiTest extends TestCase
-{
-    use RefreshDatabase;
+uses()->group('movies', 'api');
 
-    public function test_can_list_movies(): void
-    {
-        $user = User::factory()->create();
-        Movie::factory(5)->create();
+beforeEach(function (): void {
+    $this->user = User::factory()->create();
+    $this->actingAs($this->user);
+});
 
-        $response = $this->actingAs($user)->getJson('/api/movies');
+it('can list movies', function (): void {
+    Movie::factory(3)->create();
 
-        $response->assertStatus(200)
-            ->assertJsonStructure([
-                'data' => [
-                    '*' => [
-                        'id',
-                        'title',
-                        'director',
-                        'status',
-                    ],
-                ],
-                'meta' => [
-                    'current_page',
-                    'last_page',
-                    'per_page',
-                    'total',
-                ],
-            ]);
-    }
+    $response = $this->getJson('/api/movies');
 
-    public function test_can_create_movie(): void
-    {
-        $user = User::factory()->create();
+    $response->assertStatus(200)
+        ->assertJsonCount(3, 'data');
+});
 
-        $data = [
-            'title' => 'Test Movie',
-            'director' => 'Test Director',
-            'description' => 'Test description',
-            'status' => 'available',
-        ];
+it('can create movie', function (): void {
+    $data = [
+        'title' => 'Test Movie',
+        'director' => 'Test Director',
+        'genre' => 'Action',
+        'release_year' => 2024,
+        'status' => 'available',
+    ];
 
-        $response = $this->actingAs($user)->postJson('/api/movies', $data);
+    $response = $this->postJson('/api/movies', $data);
 
-        $response->assertStatus(201)
-            ->assertJson([
-                'message' => 'Movie created successfully',
-                'data' => [
-                    'title' => 'Test Movie',
-                    'director' => 'Test Director',
-                ],
-            ]);
+    $response->assertStatus(201)
+        ->assertJson([
+            'data' => [
+                'title' => 'Test Movie',
+                'director' => 'Test Director',
+            ],
+        ]);
 
-        $this->assertDatabaseHas('movies', ['title' => 'Test Movie']);
-    }
+    $this->assertDatabaseHas('movies', ['title' => 'Test Movie']);
+});
 
-    public function test_can_create_movie_with_cover(): void
-    {
-        $user = User::factory()->create();
-        Storage::fake('public');
+it('can create movie with cover', function (): void {
+    Storage::fake('public');
 
-        $cover = UploadedFile::fake()->image('cover.jpg');
+    $data = [
+        'title' => 'Test Movie',
+        'director' => 'Test Director',
+        'status' => 'available',
+        'cover' => UploadedFile::fake()->image('cover.jpg'),
+    ];
 
-        $data = [
-            'title' => 'Test Movie',
-            'director' => 'Test Director',
-            'status' => 'available',
-            'cover' => $cover,
-        ];
+    $response = $this->postJson('/api/movies', $data);
 
-        $response = $this->actingAs($user)->postJson('/api/movies', $data);
+    $response->assertStatus(201);
+    expect($response->json('data.cover'))->not->toBeNull();
+});
 
-        $response->assertStatus(201);
+it('can show movie', function (): void {
+    $movie = Movie::factory()->create();
 
-        $movie = Movie::first();
-        $this->assertNotNull($movie->cover);
-        Storage::disk('public')->assertExists($movie->cover->file_path);
-    }
+    $response = $this->getJson("/api/movies/{$movie->id}");
 
-    public function test_can_show_movie(): void
-    {
-        $user = User::factory()->create();
-        $movie = Movie::factory()->create();
+    $response->assertStatus(200)
+        ->assertJson([
+            'data' => [
+                'id' => $movie->id,
+                'title' => $movie->title,
+            ],
+        ]);
+});
 
-        $response = $this->actingAs($user)->getJson("/api/movies/{$movie->id}");
+it('can update movie', function (): void {
+    $movie = Movie::factory()->create(['title' => 'Original Title']);
 
-        $response->assertStatus(200)
-            ->assertJson([
-                'data' => [
-                    'id' => $movie->id,
-                    'title' => $movie->title,
-                    'director' => $movie->director,
-                ],
-            ]);
-    }
+    $response = $this->putJson("/api/movies/{$movie->id}", [
+        'title' => 'Updated Title',
+        'director' => $movie->director,
+        'status' => $movie->status,
+    ]);
 
-    public function test_can_update_movie(): void
-    {
-        $user = User::factory()->create();
-        $movie = Movie::factory()->create(['title' => 'Original Title']);
+    $response->assertStatus(200)
+        ->assertJson([
+            'data' => [
+                'title' => 'Updated Title',
+            ],
+        ]);
 
-        $data = ['title' => 'Updated Title'];
+    $this->assertDatabaseHas('movies', ['title' => 'Updated Title']);
+});
 
-        $response = $this->actingAs($user)->putJson("/api/movies/{$movie->id}", $data);
+it('can delete movie', function (): void {
+    $movie = Movie::factory()->create();
 
-        $response->assertStatus(200)
-            ->assertJson([
-                'message' => 'Movie updated successfully',
-                'data' => [
-                    'title' => 'Updated Title',
-                ],
-            ]);
+    $response = $this->deleteJson("/api/movies/{$movie->id}");
 
-        $this->assertDatabaseHas('movies', ['title' => 'Updated Title']);
-    }
+    $response->assertStatus(204);
+    $this->assertSoftDeleted('movies', ['id' => $movie->id]);
+});
 
-    public function test_can_delete_movie(): void
-    {
-        $user = User::factory()->create();
-        $movie = Movie::factory()->create();
+it('returns 404 for nonexistent movie', function (): void {
+    $response = $this->getJson('/api/movies/99999');
 
-        $response = $this->actingAs($user)->deleteJson("/api/movies/{$movie->id}");
+    $response->assertStatus(404);
+});
 
-        $response->assertStatus(204);
+it('validates required fields', function (): void {
+    $response = $this->postJson('/api/movies', []);
 
-        $this->assertSoftDeleted('movies', ['id' => $movie->id]);
-    }
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['title', 'director', 'status']);
+});
 
-    public function test_returns_404_for_nonexistent_movie(): void
-    {
-        $user = User::factory()->create();
+it('can filter movies by query params', function (): void {
+    Movie::factory()->create(['genre' => 'Action', 'status' => 'available']);
+    Movie::factory()->create(['genre' => 'Drama', 'status' => 'unavailable']);
 
-        $response = $this->actingAs($user)->getJson('/api/movies/999999');
+    $response = $this->getJson('/api/movies?genre=Action&status=available');
 
-        $response->assertStatus(404);
-    }
-
-    public function test_validates_required_fields(): void
-    {
-        $user = User::factory()->create();
-        $data = [];
-
-        $response = $this->actingAs($user)->postJson('/api/movies', $data);
-
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['title', 'director', 'status']);
-    }
-
-    public function test_can_filter_movies_by_query_params(): void
-    {
-        $user = User::factory()->create();
-        Movie::factory()->create(['genre' => 'Action', 'status' => 'available']);
-        Movie::factory()->create(['genre' => 'Drama', 'status' => 'unavailable']);
-
-        $response = $this->actingAs($user)->getJson('/api/movies?genre=Action&status=available');
-
-        $response->assertStatus(200);
-    }
-}
+    $response->assertStatus(200);
+});

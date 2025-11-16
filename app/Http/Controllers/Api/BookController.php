@@ -21,7 +21,7 @@ use Knuckles\Scribe\Attributes\ResponseFromApiResource;
 class BookController extends Controller
 {
     public function __construct(
-        private readonly BookService $bookService
+        private readonly BookService $bookService, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory
     ) {}
 
     #[Endpoint(
@@ -42,7 +42,7 @@ class BookController extends Controller
 
         $books = $this->bookService->paginateBooks($perPage, $filters);
 
-        return response()->json([
+        return $this->responseFactory->json([
             'data' => BookResource::collection($books->load('cover')),
             'meta' => [
                 'current_page' => $books->currentPage(),
@@ -77,7 +77,7 @@ class BookController extends Controller
     {
         $book = $this->bookService->createBook($request->validated());
 
-        return response()->json([
+        return $this->responseFactory->json([
             'message' => 'Book created successfully',
             'data' => new BookResource($book),
         ], 201);
@@ -91,7 +91,7 @@ class BookController extends Controller
     #[Response(['message' => 'Book not found'], status: 404)]
     public function show(Book $book): JsonResponse
     {
-        return response()->json([
+        return $this->responseFactory->json([
             'data' => new BookResource($book->load('cover')),
         ]);
     }
@@ -118,7 +118,7 @@ class BookController extends Controller
     {
         $updatedBook = $this->bookService->updateBook($book, $request->validated());
 
-        return response()->json([
+        return $this->responseFactory->json([
             'message' => 'Book updated successfully',
             'data' => new BookResource($updatedBook),
         ]);
@@ -134,7 +134,7 @@ class BookController extends Controller
     {
         $this->bookService->deleteBook($book);
 
-        return response()->json([
+        return $this->responseFactory->json([
             'message' => 'Book deleted successfully',
         ], 204);
     }

@@ -1,190 +1,166 @@
 <?php
 
-namespace Tests\Feature;
-
 use App\Models\Book;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Tests\TestCase;
 
-class BookApiTest extends TestCase
-{
-    use RefreshDatabase;
+uses()->group('books', 'api');
 
-    public function test_can_list_books(): void
-    {
-        $user = User::factory()->create();
-        Book::factory(5)->create();
+beforeEach(function (): void {
+    $this->user = User::factory()->create();
+    $this->actingAs($this->user);
+});
 
-        $response = $this->actingAs($user)->getJson('/api/books');
+it('can list books', function (): void {
+    Book::factory(5)->create();
 
-        $response->assertStatus(200)
-            ->assertJsonStructure([
-                'data' => [
-                    '*' => [
-                        'id',
-                        'title',
-                        'author',
-                        'isbn',
-                        'status',
-                    ],
+    $response = $this->getJson('/api/books');
+
+    $response->assertStatus(200)
+        ->assertJsonStructure([
+            'data' => [
+                '*' => [
+                    'id',
+                    'title',
+                    'author',
+                    'isbn',
+                    'status',
                 ],
-                'meta' => [
-                    'current_page',
-                    'last_page',
-                    'per_page',
-                    'total',
-                ],
-            ]);
-    }
+            ],
+            'meta' => [
+                'current_page',
+                'last_page',
+                'per_page',
+                'total',
+            ],
+        ]);
+});
 
-    public function test_can_create_book(): void
-    {
-        $user = User::factory()->create();
+it('can create book', function (): void {
+    $data = [
+        'title' => 'Test Book',
+        'author' => 'Test Author',
+        'isbn' => '978-3-16-148410-0',
+        'description' => 'Test description',
+        'status' => 'available',
+    ];
 
-        $data = [
-            'title' => 'Test Book',
-            'author' => 'Test Author',
-            'isbn' => '978-3-16-148410-0',
-            'description' => 'Test description',
-            'status' => 'available',
-        ];
+    $response = $this->postJson('/api/books', $data);
 
-        $response = $this->actingAs($user)->postJson('/api/books', $data);
+    $response->assertStatus(201)
+        ->assertJson([
+            'message' => 'Book created successfully',
+            'data' => [
+                'title' => 'Test Book',
+                'author' => 'Test Author',
+            ],
+        ]);
 
-        $response->assertStatus(201)
-            ->assertJson([
-                'message' => 'Book created successfully',
-                'data' => [
-                    'title' => 'Test Book',
-                    'author' => 'Test Author',
-                ],
-            ]);
+    $this->assertDatabaseHas('books', ['title' => 'Test Book']);
+});
 
-        $this->assertDatabaseHas('books', ['title' => 'Test Book']);
-    }
+it('can create book with cover', function (): void {
+    Storage::fake('public');
 
-    public function test_can_create_book_with_cover(): void
-    {
-        $user = User::factory()->create();
-        Storage::fake('public');
+    $cover = UploadedFile::fake()->image('cover.jpg');
 
-        $cover = UploadedFile::fake()->image('cover.jpg');
+    $data = [
+        'title' => 'Test Book',
+        'author' => 'Test Author',
+        'isbn' => '978-3-16-148410-0',
+        'status' => 'available',
+        'cover' => $cover,
+    ];
 
-        $data = [
-            'title' => 'Test Book',
-            'author' => 'Test Author',
-            'isbn' => '978-3-16-148410-0',
-            'status' => 'available',
-            'cover' => $cover,
-        ];
+    $response = $this->postJson('/api/books', $data);
 
-        $response = $this->actingAs($user)->postJson('/api/books', $data);
+    $response->assertStatus(201);
 
-        $response->assertStatus(201);
+    $book = \App\Models\Book::query()->first();
+    $this->assertNotNull($book->cover);
+    Storage::disk('public')->assertExists($book->cover->file_path);
+});
 
-        $book = Book::first();
-        $this->assertNotNull($book->cover);
-        Storage::disk('public')->assertExists($book->cover->file_path);
-    }
+it('cannot create book with duplicate isbn', function (): void {
+    Book::factory()->create(['isbn' => '978-3-16-148410-0']);
 
-    public function test_cannot_create_book_with_duplicate_isbn(): void
-    {
-        $user = User::factory()->create();
-        Book::factory()->create(['isbn' => '978-3-16-148410-0']);
+    $data = [
+        'title' => 'Test Book',
+        'author' => 'Test Author',
+        'isbn' => '978-3-16-148410-0',
+        'status' => 'available',
+    ];
 
-        $data = [
-            'title' => 'Test Book',
-            'author' => 'Test Author',
-            'isbn' => '978-3-16-148410-0',
-            'status' => 'available',
-        ];
+    $response = $this->postJson('/api/books', $data);
 
-        $response = $this->actingAs($user)->postJson('/api/books', $data);
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors('isbn');
+});
 
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors('isbn');
-    }
+it('can show book', function (): void {
+    $book = Book::factory()->create();
 
-    public function test_can_show_book(): void
-    {
-        $user = User::factory()->create();
-        $book = Book::factory()->create();
+    $response = $this->getJson("/api/books/{$book->id}");
 
-        $response = $this->actingAs($user)->getJson("/api/books/{$book->id}");
+    $response->assertStatus(200)
+        ->assertJson([
+            'data' => [
+                'id' => $book->id,
+                'title' => $book->title,
+                'author' => $book->author,
+            ],
+        ]);
+});
 
-        $response->assertStatus(200)
-            ->assertJson([
-                'data' => [
-                    'id' => $book->id,
-                    'title' => $book->title,
-                    'author' => $book->author,
-                ],
-            ]);
-    }
+it('can update book', function (): void {
+    $book = Book::factory()->create(['title' => 'Original Title']);
 
-    public function test_can_update_book(): void
-    {
-        $user = User::factory()->create();
-        $book = Book::factory()->create(['title' => 'Original Title']);
+    $data = ['title' => 'Updated Title'];
 
-        $data = ['title' => 'Updated Title'];
+    $response = $this->putJson("/api/books/{$book->id}", $data);
 
-        $response = $this->actingAs($user)->putJson("/api/books/{$book->id}", $data);
+    $response->assertStatus(200)
+        ->assertJson([
+            'message' => 'Book updated successfully',
+            'data' => [
+                'title' => 'Updated Title',
+            ],
+        ]);
 
-        $response->assertStatus(200)
-            ->assertJson([
-                'message' => 'Book updated successfully',
-                'data' => [
-                    'title' => 'Updated Title',
-                ],
-            ]);
+    $this->assertDatabaseHas('books', ['title' => 'Updated Title']);
+});
 
-        $this->assertDatabaseHas('books', ['title' => 'Updated Title']);
-    }
+it('can delete book', function (): void {
+    $book = Book::factory()->create();
 
-    public function test_can_delete_book(): void
-    {
-        $user = User::factory()->create();
-        $book = Book::factory()->create();
+    $response = $this->deleteJson("/api/books/{$book->id}");
 
-        $response = $this->actingAs($user)->deleteJson("/api/books/{$book->id}");
+    $response->assertStatus(204);
 
-        $response->assertStatus(204);
+    $this->assertSoftDeleted('books', ['id' => $book->id]);
+});
 
-        $this->assertSoftDeleted('books', ['id' => $book->id]);
-    }
+it('returns 404 for nonexistent book', function (): void {
+    $response = $this->getJson('/api/books/999999');
 
-    public function test_returns_404_for_nonexistent_book(): void
-    {
-        $user = User::factory()->create();
+    $response->assertStatus(404);
+});
 
-        $response = $this->actingAs($user)->getJson('/api/books/999999');
+it('validates required fields', function (): void {
+    $data = [];
 
-        $response->assertStatus(404);
-    }
+    $response = $this->postJson('/api/books', $data);
 
-    public function test_validates_required_fields(): void
-    {
-        $user = User::factory()->create();
-        $data = [];
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['title', 'author', 'isbn', 'status']);
+});
 
-        $response = $this->actingAs($user)->postJson('/api/books', $data);
+it('can filter books by query params', function (): void {
+    Book::factory()->create(['genre' => 'Fiction', 'status' => 'available']);
+    Book::factory()->create(['genre' => 'Science', 'status' => 'unavailable']);
 
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['title', 'author', 'isbn', 'status']);
-    }
+    $response = $this->getJson('/api/books?genre=Fiction&status=available');
 
-    public function test_can_filter_books_by_query_params(): void
-    {
-        $user = User::factory()->create();
-        Book::factory()->create(['genre' => 'Fiction', 'status' => 'available']);
-        Book::factory()->create(['genre' => 'Science', 'status' => 'unavailable']);
-
-        $response = $this->actingAs($user)->getJson('/api/books?genre=Fiction&status=available');
-
-        $response->assertStatus(200);
-    }
-}
+    $response->assertStatus(200);
+});
