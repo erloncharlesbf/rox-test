@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Services\AuthService;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
@@ -124,7 +125,8 @@ it('can logout', function (): void {
 });
 
 it('logout requires authentication', function (): void {
-    $response = $this->postJson('/api/logout');
+    $response = $this->withHeader('Authorization', 'Bearer invalid-token')
+        ->postJson('/api/logout');
 
     $response->assertStatus(401);
 });
@@ -202,12 +204,12 @@ it('validates reset password fields', function (): void {
 it('forgot password returns error when sending fails', function (): void {
     User::factory()->create(['email' => 'test@example.com']);
 
-    $mockAuthService = Mockery::mock(\App\Services\AuthService::class)->makePartial();
+    $mockAuthService = Mockery::mock(AuthService::class)->makePartial();
     $mockAuthService->shouldReceive('sendPasswordResetLink')
         ->once()
         ->andReturn('passwords.throttled');
 
-    $this->app->instance(\App\Services\AuthService::class, $mockAuthService);
+    $this->app->instance(AuthService::class, $mockAuthService);
 
     $response = $this->postJson('/api/forgot-password', [
         'email' => 'test@example.com',

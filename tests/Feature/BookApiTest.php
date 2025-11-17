@@ -77,7 +77,7 @@ it('can create book with cover', function (): void {
 
     $response->assertStatus(201);
 
-    $book = \App\Models\Book::query()->first();
+    $book = Book::query()->first();
     $this->assertNotNull($book->cover);
     Storage::disk('public')->assertExists($book->cover->file_path);
 });
@@ -163,4 +163,49 @@ it('can filter books by query params', function (): void {
     $response = $this->getJson('/api/books?genre=Fiction&status=available');
 
     $response->assertStatus(200);
+});
+
+it('requires authentication to list books', function (): void {
+    auth()->logout();
+
+    $response = $this->getJson('/api/books');
+
+    $response->assertStatus(401)
+        ->assertJson(['message' => 'Unauthenticated']);
+});
+
+it('requires authentication to create book', function (): void {
+    auth()->logout();
+
+    $response = $this->postJson('/api/books', [
+        'title' => 'Test Book',
+        'author' => 'Test Author',
+        'isbn' => '978-3-16-148410-0',
+        'status' => 'available',
+    ]);
+
+    $response->assertStatus(401)
+        ->assertJson(['message' => 'Unauthenticated']);
+});
+
+it('requires authentication to update book', function (): void {
+    $book = Book::factory()->create();
+    auth()->logout();
+
+    $response = $this->putJson("/api/books/{$book->id}", [
+        'title' => 'Updated Title',
+    ]);
+
+    $response->assertStatus(401)
+        ->assertJson(['message' => 'Unauthenticated']);
+});
+
+it('requires authentication to delete book', function (): void {
+    $book = Book::factory()->create();
+    auth()->logout();
+
+    $response = $this->deleteJson("/api/books/{$book->id}");
+
+    $response->assertStatus(401)
+        ->assertJson(['message' => 'Unauthenticated']);
 });

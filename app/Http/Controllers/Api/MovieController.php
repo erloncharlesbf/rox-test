@@ -1,27 +1,37 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Movie\DestroyMovieRequest;
+use App\Http\Requests\Movie\IndexMovieRequest;
+use App\Http\Requests\Movie\ShowMovieRequest;
 use App\Http\Requests\Movie\StoreMovieRequest;
 use App\Http\Requests\Movie\UpdateMovieRequest;
 use App\Http\Resources\Movie\MovieResource;
 use App\Models\Movie;
 use App\Services\MovieService;
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Knuckles\Scribe\Attributes\Authenticated;
 use Knuckles\Scribe\Attributes\BodyParam;
 use Knuckles\Scribe\Attributes\Endpoint;
 use Knuckles\Scribe\Attributes\Group;
 use Knuckles\Scribe\Attributes\QueryParam;
-use Knuckles\Scribe\Attributes\Response;
 use Knuckles\Scribe\Attributes\ResponseFromApiResource;
 
-#[Group('Movies Management', 'APIs for managing movies in your collection. All endpoints support full CRUD operations with advanced filtering and pagination.')]
+#[Group(
+    'Movies Management',
+    'APIs for managing movies in your collection. All endpoints support full CRUD operations with advanced filtering and pagination.'
+)]
+#[Authenticated]
 class MovieController extends Controller
 {
     public function __construct(
-        private readonly MovieService $movieService, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory
+        private readonly MovieService $movieService,
+        private readonly ResponseFactory $responseFactory
     ) {}
 
     #[Endpoint(
@@ -35,9 +45,9 @@ class MovieController extends Controller
     #[QueryParam('genre', 'string', 'Filter movies by genre (exact match)', required: false, example: 'Crime')]
     #[QueryParam('status', 'string', 'Filter movies by availability status (available, unavailable, coming_soon)', required: false, example: 'available')]
     #[ResponseFromApiResource(MovieResource::class, Movie::class, collection: true, paginate: 15)]
-    public function index(Request $request): JsonResponse
+    public function index(IndexMovieRequest $request): JsonResponse
     {
-        $perPage = $request->input('per_page', 15);
+        $perPage = (int) $request->input('per_page', 15);
         $filters = $request->only(['title', 'director', 'genre', 'status']);
 
         $movies = $this->movieService->paginateMovies($perPage, $filters);
@@ -69,14 +79,14 @@ class MovieController extends Controller
     #[BodyParam('price', 'number', 'The price of the movie in USD', required: false, example: 12.99)]
     #[BodyParam('status', 'string', 'Current availability status: available, unavailable, or coming_soon', required: true, example: 'available')]
     #[BodyParam('cover', 'file', 'Cover/poster image file (max 2MB, jpeg/png/jpg/gif/webp)', required: false)]
-    #[Response(['message' => 'Movie created successfully', 'data' => ['id' => 1, 'title' => 'The Godfather', 'director' => 'Francis Ford Coppola']], status: 201)]
+    #[ResponseFromApiResource(MovieResource::class, Movie::class, status: 201)]
     public function store(StoreMovieRequest $request): JsonResponse
     {
         $movie = $this->movieService->createMovie($request->validated());
 
         return $this->responseFactory->json([
             'message' => 'Movie created successfully',
-            'data' => new MovieResource($movie),
+            'data' => MovieResource::make($movie),
         ], 201);
     }
 
@@ -85,11 +95,10 @@ class MovieController extends Controller
         description: 'Retrieve detailed information about a specific movie by its ID, including cover image if available.'
     )]
     #[ResponseFromApiResource(MovieResource::class, Movie::class)]
-    #[Response(['message' => 'Movie not found'], status: 404)]
-    public function show(Movie $movie): JsonResponse
+    public function show(ShowMovieRequest $request, Movie $movie): JsonResponse
     {
         return $this->responseFactory->json([
-            'data' => new MovieResource($movie->load('cover')),
+            'data' => MovieResource::make($movie->load('cover')),
         ]);
     }
 
@@ -109,15 +118,14 @@ class MovieController extends Controller
     #[BodyParam('price', 'number', 'The price of the movie in USD', required: false, example: 12.99)]
     #[BodyParam('status', 'string', 'Current availability status', required: false, example: 'available')]
     #[BodyParam('cover', 'file', 'New cover/poster image file (replaces existing)', required: false)]
-    #[Response(['message' => 'Movie updated successfully', 'data' => ['id' => 1, 'title' => 'Updated Title']])]
-    #[Response(['message' => 'Movie not found'], status: 404)]
+    #[ResponseFromApiResource(MovieResource::class, Movie::class)]
     public function update(UpdateMovieRequest $request, Movie $movie): JsonResponse
     {
         $updatedMovie = $this->movieService->updateMovie($movie, $request->validated());
 
         return $this->responseFactory->json([
             'message' => 'Movie updated successfully',
-            'data' => new MovieResource($updatedMovie),
+            'data' => MovieResource::make($updatedMovie),
         ]);
     }
 
@@ -125,9 +133,7 @@ class MovieController extends Controller
         title: 'Delete a movie',
         description: 'Permanently remove a movie from the collection. This operation uses soft delete, so the movie can be restored if needed. Any associated cover image will also be deleted.'
     )]
-    #[Response(['message' => 'Movie deleted successfully'], status: 204)]
-    #[Response(['message' => 'Movie not found'], status: 404)]
-    public function destroy(Movie $movie): JsonResponse
+    public function destroy(DestroyMovieRequest $request, Movie $movie): JsonResponse
     {
         $this->movieService->deleteMovie($movie);
 

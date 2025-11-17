@@ -2,17 +2,16 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function __construct(private readonly \Illuminate\Database\Schema\Builder $builder) {}
-
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        $this->builder->create('attachments', function (Blueprint $table): void {
+        Schema::create('attachments', function (Blueprint $table): void {
             $table->id();
             $table->morphs('attachable');
             $table->string('file_name');
@@ -32,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        $this->builder->dropIfExists('attachments');
+        Schema::dropIfExists('attachments');
     }
 };

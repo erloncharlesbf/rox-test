@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Attachment;
 use App\Models\Movie;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -8,7 +9,7 @@ uses(RefreshDatabase::class);
 it('attachment belongs to attachable', function (): void {
     $movie = Movie::factory()->create();
 
-    $attachment = \App\Models\Attachment::query()->create([
+    $attachment = Attachment::query()->create([
         'attachable_type' => Movie::class,
         'attachable_id' => $movie->id,
         'file_name' => 'test.jpg',
@@ -25,7 +26,7 @@ it('attachment belongs to attachable', function (): void {
 it('attachment casts file size to integer', function (): void {
     $movie = Movie::factory()->create();
 
-    $attachment = \App\Models\Attachment::query()->create([
+    $attachment = Attachment::query()->create([
         'attachable_type' => Movie::class,
         'attachable_id' => $movie->id,
         'file_name' => 'test.jpg',

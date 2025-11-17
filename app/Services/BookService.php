@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Contracts\Repositories\BookRepositoryInterface;
 use App\Models\Book;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class BookService
 {
     public function __construct(
-        private readonly BookRepositoryInterface $bookRepository, private readonly \Illuminate\Database\DatabaseManager $databaseManager, private readonly \Illuminate\Filesystem\FilesystemManager $filesystemManager
+        private readonly BookRepositoryInterface $bookRepository
     ) {}
 
     public function getAllBooks(): Collection
@@ -30,7 +34,7 @@ class BookService
 
     public function createBook(array $data): Book
     {
-        return $this->databaseManager->transaction(function () use ($data) {
+        return DB::transaction(function () use ($data) {
             $coverFile = $data['cover'] ?? null;
             unset($data['cover']);
 
@@ -46,7 +50,7 @@ class BookService
 
     public function updateBook(Book $book, array $data): Book
     {
-        return $this->databaseManager->transaction(function () use ($book, $data) {
+        return DB::transaction(function () use ($book, $data) {
             $coverFile = $data['cover'] ?? null;
             unset($data['cover']);
 
@@ -54,7 +58,7 @@ class BookService
 
             if ($coverFile) {
                 if ($book->cover) {
-                    $this->filesystemManager->disk('public')->delete($book->cover->file_path);
+                    Storage::disk('public')->delete($book->cover->file_path);
                     $book->cover->delete();
                 }
 
@@ -67,9 +71,9 @@ class BookService
 
     public function deleteBook(Book $book): bool
     {
-        return $this->databaseManager->transaction(function () use ($book) {
+        return DB::transaction(function () use ($book) {
             if ($book->cover) {
-                $this->filesystemManager->disk('public')->delete($book->cover->file_path);
+                Storage::disk('public')->delete($book->cover->file_path);
             }
 
             return $book->delete();

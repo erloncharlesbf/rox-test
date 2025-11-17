@@ -6,6 +6,7 @@ use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Env;
 use Laravel\Dusk\TestCase as BaseTestCase;
 use PHPUnit\Framework\Attributes\BeforeClass;
 
@@ -27,7 +28,7 @@ abstract class DuskTestCase extends BaseTestCase
      */
     protected function driver(): RemoteWebDriver
     {
-        $options = (new ChromeOptions)->addArguments((new \Illuminate\Support\Collection([
+        $options = (new ChromeOptions)->addArguments((new Collection([
             $this->shouldStartMaximized() ? '--start-maximized' : '--window-size=1920,1080',
             '--disable-search-engine-choice-screen',
             '--disable-smooth-scrolling',
@@ -37,7 +38,7 @@ abstract class DuskTestCase extends BaseTestCase
         ]))->all());
 
         return RemoteWebDriver::create(
-            \Illuminate\Support\Env::get('DUSK_DRIVER_URL', env('DUSK_DRIVER_URL', 'http://localhost:9515')),
+            Env::get('DUSK_DRIVER_URL', env('DUSK_DRIVER_URL', 'http://localhost:9515')),
             DesiredCapabilities::chrome()->setCapability(
                 ChromeOptions::CAPABILITY, $options
             )

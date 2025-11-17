@@ -9,6 +9,7 @@
         "php": "^8.2",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
+        "laravel/telescope": "^5.15",
         "laravel/tinker": "^2.10.1"
     },
     "require-dev": {
@@ -83,6 +84,16 @@
         ],
         "lint:check": [
             "vendor/bin/pint --test"
+        ],
+        "verify": [
+            "@putenv DB_CONNECTION=sqlite",
+            "@putenv DB_DATABASE=:memory:",
+            "@php artisan config:clear --ansi",
+            "@lint:check",
+            "@rector",
+            "vendor/bin/pest tests/Architecture --colors=always",
+            "@test",
+            "@test:coverage"
         ],
         "wip": [
             "@lint",

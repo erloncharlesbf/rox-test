@@ -10,12 +10,13 @@ return RectorConfig::configure()
         __DIR__.'/app',
         __DIR__.'/bootstrap',
         __DIR__.'/config',
-        __DIR__.'/database',
         __DIR__.'/routes',
         __DIR__.'/tests',
     ])
     ->withSkip([
         __DIR__.'/bootstrap/cache',
+        __DIR__.'/database/migrations',
+        __DIR__.'/database/factories',
         __DIR__.'/storage',
         __DIR__.'/vendor',
     ])
@@ -37,7 +38,6 @@ return RectorConfig::configure()
         LaravelSetList::LARAVEL_FACADE_ALIASES_TO_FULL_NAMES,
         LaravelSetList::LARAVEL_FACTORIES,
         LaravelSetList::LARAVEL_IF_HELPERS,
-        LaravelSetList::LARAVEL_STATIC_TO_INJECTION,
         LaravelSetList::LARAVEL_TESTING,
         LaravelSetList::LARAVEL_TYPE_DECLARATIONS,
     ])

@@ -311,7 +311,7 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/logout
+    uri: api/ogout
     metadata:
       custom: []
       groupName: Authentication

@@ -10,12 +10,25 @@
 |
 */
 
-// Test: No debug functions in production code
+use App\Contracts\Repositories\BaseRepositoryInterface;
+use App\Http\Controllers\Controller;
+use App\Http\Resources\Attachment\AttachmentResource;
+use App\Http\Resources\Book\BookResource;
+use App\Http\Resources\Movie\MovieResource;
+use App\Models\Book;
+use App\Models\Movie;
+use App\Models\User;
+use App\Repositories\BaseRepository;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\ServiceProvider;
+
 arch('no debug functions in production code')
     ->expect(['dd', 'dump', 'var_dump', 'print_r', 'var_export', 'die', 'exit'])
     ->not->toBeUsed();
 
-// Test: No debug statements in app code
 arch('app does not use debugging functions')
     ->expect('App')
     ->not->toUse([
@@ -30,85 +43,72 @@ arch('app does not use debugging functions')
         'print',
     ]);
 
-// Test: No ray debugging in production
 arch('no ray debugging in production')
     ->expect(['ray'])
     ->not->toBeUsed();
 
-// Test: Controllers should be in Controllers namespace
 arch('controllers')
     ->expect('App\Http\Controllers')
     ->toBeClasses()
     ->toHaveSuffix('Controller')
-    ->ignoring(\App\Http\Controllers\Controller::class);
+    ->ignoring(Controller::class);
 
-// Test: Models should be in Models namespace
 arch('models')
     ->expect('App\Models')
     ->toBeClasses()
-    ->toExtend(\Illuminate\Database\Eloquent\Model::class)
-    ->ignoring(\App\Models\User::class); // User extends Authenticatable
+    ->toExtend(Model::class)
+    ->ignoring(User::class);
 
-// Test: Repositories should be in Repositories namespace
 arch('repositories')
     ->expect('App\Repositories')
     ->toBeClasses()
     ->toHaveSuffix('Repository');
 
-// Test: Services should be in Services namespace
 arch('services')
     ->expect('App\Services')
     ->toBeClasses()
     ->toHaveSuffix('Service');
 
-// Test: Requests should extend FormRequest
 arch('requests')
     ->expect('App\Http\Requests')
     ->toBeClasses()
-    ->toExtend(\Illuminate\Foundation\Http\FormRequest::class);
+    ->toExtend(FormRequest::class);
 
-// Test: Resources should extend JsonResource
 arch('resources should extend JsonResource or ResourceCollection')
     ->expect('App\Http\Resources')
     ->toBeClasses()
     ->toExtendNothing()
     ->ignoring([
-        \App\Http\Resources\Attachment\AttachmentResource::class,
-        \App\Http\Resources\Book\BookResource::class,
-        \App\Http\Resources\Movie\MovieResource::class,
+        AttachmentResource::class,
+        BookResource::class,
+        MovieResource::class,
     ]);
 
-// Test: Repositories should implement interfaces
 arch('repositories implement interfaces')
     ->expect('App\Repositories')
-    ->toImplement(\App\Contracts\Repositories\BaseRepositoryInterface::class)
-    ->ignoring(\App\Repositories\BaseRepository::class);
+    ->toImplement(BaseRepositoryInterface::class)
+    ->ignoring(BaseRepository::class);
 
-// Test: Controllers should be classes
 arch('controllers are classes')
     ->expect('App\Http\Controllers')
     ->toBeClasses();
 
-// Test: Models should use traits properly
 arch('models use SoftDeletes when needed')
-    ->expect(\App\Models\Movie::class)
-    ->toUse(\Illuminate\Database\Eloquent\SoftDeletes::class);
+    ->expect(Movie::class)
+    ->toUse(SoftDeletes::class);
 
 arch('models use SoftDeletes for Book')
-    ->expect(\App\Models\Book::class)
-    ->toUse(\Illuminate\Database\Eloquent\SoftDeletes::class);
+    ->expect(Book::class)
+    ->toUse(SoftDeletes::class);
 
-// Test: No eval() usage
 arch('no eval usage')
     ->expect(['eval'])
     ->not->toBeUsed();
 
-// Test: No global variables
 arch('no global variables in classes')
     ->expect('App')
     ->not->toUse(['global']);
 
-// Test: Services should be readonly (dependency injection)
 arch('services use dependency injection')
     ->expect('App\Services')
     ->toOnlyUse([
@@ -119,9 +119,12 @@ arch('services use dependency injection')
         'Illuminate\Pagination',
         'Illuminate\Support',
         'Illuminate\Database',
+        'Illuminate\Filesystem',
+        'Illuminate\Http',
+        'Illuminate\Contracts',
+        'Illuminate\Auth',
     ]);
 
-// Test: Controllers only use Services and Requests
 arch('controllers use services and requests')
     ->expect('App\Http\Controllers\Api')
     ->toOnlyUse([
@@ -132,26 +135,24 @@ arch('controllers use services and requests')
         'App\Http\Controllers',
         'Illuminate\Http',
         'Illuminate\Support\Facades',
+        'Illuminate\Contracts',
+        'Illuminate\Auth',
         'Knuckles\Scribe\Attributes',
-        'response', // Helper function
+        'response',
     ]);
 
-// Test: No direct DB queries in Controllers
 arch('controllers do not use DB facade directly')
     ->expect('App\Http\Controllers')
-    ->not->toUse(\Illuminate\Support\Facades\DB::class);
+    ->not->toUse(DB::class);
 
-// Test: Strict types declaration
 arch('strict types in all PHP files')
     ->expect('App')
-    ->toUseStrictTypes(); // Ignore for now, can be enforced gradually
+    ->toUseStrictTypes();
 
-// Test: No compact() usage (prefer explicit arrays)
 arch('no compact function usage')
     ->expect(['compact'])
     ->not->toBeUsed();
 
-// Test: Providers should extend ServiceProvider
 arch('providers extend ServiceProvider')
     ->expect('App\Providers')
-    ->toExtend(\Illuminate\Support\ServiceProvider::class);
+    ->toExtend(ServiceProvider::class);

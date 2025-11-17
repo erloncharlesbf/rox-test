@@ -16,17 +16,6 @@ class UserFactory extends Factory
     protected static ?string $password;
 
     /**
-     * Create a new factory instance.
-     *
-     * @param  int|null  $count
-     * @param  \UnitEnum|string|null  $connection
-     */
-    public function __construct($count = null, ?\Illuminate\Support\Collection $states = null, ?\Illuminate\Support\Collection $has = null, ?\Illuminate\Support\Collection $for = null, ?\Illuminate\Support\Collection $afterMaking = null, ?\Illuminate\Support\Collection $afterCreating = null, $connection = null, ?\Illuminate\Support\Collection $recycle = null, ?bool $expandRelationships = null, array $excludeRelationships = [], private readonly ?\Illuminate\Contracts\Hashing\Hasher $hasher = null)
-    {
-        parent::__construct($count, $states, $has, $for, $afterMaking, $afterCreating, $connection, $recycle, $expandRelationships, $excludeRelationships);
-    }
-
-    /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
@@ -37,7 +26,7 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= $this->hasher->make('password'),
+            'password' => static::$password ??= bcrypt('password'),
             'remember_token' => Str::random(10),
         ];
     }

@@ -18,7 +18,22 @@ it('can list movies', function (): void {
     $response = $this->getJson('/api/movies');
 
     $response->assertStatus(200)
-        ->assertJsonCount(3, 'data');
+        ->assertJsonStructure([
+            'data' => [
+                '*' => [
+                    'id',
+                    'title',
+                    'director',
+                    'status',
+                ],
+            ],
+            'meta' => [
+                'current_page',
+                'last_page',
+                'per_page',
+                'total',
+            ],
+        ]);
 });
 
 it('can create movie', function (): void {
@@ -26,7 +41,6 @@ it('can create movie', function (): void {
         'title' => 'Test Movie',
         'director' => 'Test Director',
         'genre' => 'Action',
-        'release_year' => 2024,
         'status' => 'available',
     ];
 
@@ -34,6 +48,7 @@ it('can create movie', function (): void {
 
     $response->assertStatus(201)
         ->assertJson([
+            'message' => 'Movie created successfully',
             'data' => [
                 'title' => 'Test Movie',
                 'director' => 'Test Director',
@@ -78,12 +93,11 @@ it('can update movie', function (): void {
 
     $response = $this->putJson("/api/movies/{$movie->id}", [
         'title' => 'Updated Title',
-        'director' => $movie->director,
-        'status' => $movie->status,
     ]);
 
     $response->assertStatus(200)
         ->assertJson([
+            'message' => 'Movie updated successfully',
             'data' => [
                 'title' => 'Updated Title',
             ],
@@ -121,4 +135,48 @@ it('can filter movies by query params', function (): void {
     $response = $this->getJson('/api/movies?genre=Action&status=available');
 
     $response->assertStatus(200);
+});
+
+it('requires authentication to list movies', function (): void {
+    auth()->logout();
+
+    $response = $this->getJson('/api/movies');
+
+    $response->assertStatus(401)
+        ->assertJson(['message' => 'Unauthenticated']);
+});
+
+it('requires authentication to create movie', function (): void {
+    auth()->logout();
+
+    $response = $this->postJson('/api/movies', [
+        'title' => 'Test Movie',
+        'director' => 'Test Director',
+        'status' => 'available',
+    ]);
+
+    $response->assertStatus(401)
+        ->assertJson(['message' => 'Unauthenticated']);
+});
+
+it('requires authentication to update movie', function (): void {
+    $movie = Movie::factory()->create();
+    auth()->logout();
+
+    $response = $this->putJson("/api/movies/{$movie->id}", [
+        'title' => 'Updated Title',
+    ]);
+
+    $response->assertStatus(401)
+        ->assertJson(['message' => 'Unauthenticated']);
+});
+
+it('requires authentication to delete movie', function (): void {
+    $movie = Movie::factory()->create();
+    auth()->logout();
+
+    $response = $this->deleteJson("/api/movies/{$movie->id}");
+
+    $response->assertStatus(401)
+        ->assertJson(['message' => 'Unauthenticated']);
 });

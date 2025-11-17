@@ -1,27 +1,37 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Book\DestroyBookRequest;
+use App\Http\Requests\Book\IndexBookRequest;
+use App\Http\Requests\Book\ShowBookRequest;
 use App\Http\Requests\Book\StoreBookRequest;
 use App\Http\Requests\Book\UpdateBookRequest;
 use App\Http\Resources\Book\BookResource;
 use App\Models\Book;
 use App\Services\BookService;
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Knuckles\Scribe\Attributes\Authenticated;
 use Knuckles\Scribe\Attributes\BodyParam;
 use Knuckles\Scribe\Attributes\Endpoint;
 use Knuckles\Scribe\Attributes\Group;
 use Knuckles\Scribe\Attributes\QueryParam;
-use Knuckles\Scribe\Attributes\Response;
 use Knuckles\Scribe\Attributes\ResponseFromApiResource;
 
-#[Group('Books Management', 'APIs for managing books in your digital library. All endpoints support full CRUD operations with advanced filtering and pagination.')]
+#[Group(
+    'Books Management',
+    'APIs for managing books in your digital library. All endpoints support full CRUD operations with advanced filtering and pagination.'
+)]
+#[Authenticated]
 class BookController extends Controller
 {
     public function __construct(
-        private readonly BookService $bookService, private readonly \Illuminate\Contracts\Routing\ResponseFactory $responseFactory
+        private readonly BookService $bookService,
+        private readonly ResponseFactory $responseFactory
     ) {}
 
     #[Endpoint(
@@ -35,9 +45,9 @@ class BookController extends Controller
     #[QueryParam('genre', 'string', 'Filter books by genre (exact match)', required: false, example: 'Fiction')]
     #[QueryParam('status', 'string', 'Filter books by availability status (available, unavailable, coming_soon)', required: false, example: 'available')]
     #[ResponseFromApiResource(BookResource::class, Book::class, collection: true, paginate: 15)]
-    public function index(Request $request): JsonResponse
+    public function index(IndexBookRequest $request): JsonResponse
     {
-        $perPage = $request->input('per_page', 15);
+        $perPage = (int) $request->input('per_page', 15);
         $filters = $request->only(['title', 'author', 'genre', 'status']);
 
         $books = $this->bookService->paginateBooks($perPage, $filters);
@@ -69,17 +79,14 @@ class BookController extends Controller
     #[BodyParam('price', 'number', 'The price of the book in USD', required: false, example: 15.99)]
     #[BodyParam('status', 'string', 'Current availability status: available, unavailable, or coming_soon', required: true, example: 'available')]
     #[BodyParam('cover', 'file', 'Cover image file (max 2MB, jpeg/png/jpg/gif/webp)', required: false)]
-    #[Response([
-        'message' => 'Book created successfully',
-        'data' => ['id' => 1, 'title' => 'The Great Gatsby', 'author' => 'F. Scott Fitzgerald'],
-    ], status: 201)]
+    #[ResponseFromApiResource(BookResource::class, Book::class, status: 201)]
     public function store(StoreBookRequest $request): JsonResponse
     {
         $book = $this->bookService->createBook($request->validated());
 
         return $this->responseFactory->json([
             'message' => 'Book created successfully',
-            'data' => new BookResource($book),
+            'data' => BookResource::make($book),
         ], 201);
     }
 
@@ -88,11 +95,10 @@ class BookController extends Controller
         description: 'Retrieve detailed information about a specific book by its ID, including cover image if available.'
     )]
     #[ResponseFromApiResource(BookResource::class, Book::class)]
-    #[Response(['message' => 'Book not found'], status: 404)]
-    public function show(Book $book): JsonResponse
+    public function show(ShowBookRequest $request, Book $book): JsonResponse
     {
         return $this->responseFactory->json([
-            'data' => new BookResource($book->load('cover')),
+            'data' => BookResource::make($book->load('cover')),
         ]);
     }
 
@@ -112,15 +118,14 @@ class BookController extends Controller
     #[BodyParam('price', 'number', 'The price of the book in USD', required: false, example: 15.99)]
     #[BodyParam('status', 'string', 'Current availability status', required: false, example: 'available')]
     #[BodyParam('cover', 'file', 'New cover image file (replaces existing)', required: false)]
-    #[Response(['message' => 'Book updated successfully', 'data' => ['id' => 1, 'title' => 'Updated Title']])]
-    #[Response(['message' => 'Book not found'], status: 404)]
+    #[ResponseFromApiResource(BookResource::class, Book::class)]
     public function update(UpdateBookRequest $request, Book $book): JsonResponse
     {
         $updatedBook = $this->bookService->updateBook($book, $request->validated());
 
         return $this->responseFactory->json([
             'message' => 'Book updated successfully',
-            'data' => new BookResource($updatedBook),
+            'data' => BookResource::make($updatedBook),
         ]);
     }
 
@@ -128,9 +133,7 @@ class BookController extends Controller
         title: 'Delete a book',
         description: 'Permanently remove a book from the library. This operation uses soft delete, so the book can be restored if needed. Any associated cover image will also be deleted.'
     )]
-    #[Response(['message' => 'Book deleted successfully'], status: 204)]
-    #[Response(['message' => 'Book not found'], status: 404)]
-    public function destroy(Book $book): JsonResponse
+    public function destroy(DestroyBookRequest $request, Book $book): JsonResponse
     {
         $this->bookService->deleteBook($book);
 

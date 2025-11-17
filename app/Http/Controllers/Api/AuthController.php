@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -100,7 +102,7 @@ class AuthController extends Controller
     #[Response(['message' => 'We could not find a user with that email address.'], status: 422)]
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
     {
-        $status = $this->authService->sendPasswordResetLink($request->email);
+        $status = $this->authService->sendPasswordResetLink($request->input('email'));
 
         if ($status === Password::RESET_LINK_SENT) {
             return $this->responseFactory->json([

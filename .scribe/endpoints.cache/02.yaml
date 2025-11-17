@@ -6,6 +6,119 @@ endpoints:
   -
     custom: []
     httpMethods:
+      - GET
+    uri: api/movies
+    metadata:
+      custom: []
+      groupName: 'Movies Management'
+      groupDescription: 'APIs for managing movies in your collection. All endpoints support full CRUD operations with advanced filtering and pagination.'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List all movies'
+      description: 'Retrieve a paginated list of all movies in the collection. Supports filtering by multiple criteria and customizable pagination.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      page:
+        custom: []
+        name: page
+        description: 'Page number for pagination'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      per_page:
+        custom: []
+        name: per_page
+        description: 'Number of items per page (default: 15, max: 100)'
+        required: true
+        example: 15
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      title:
+        custom: []
+        name: title
+        description: 'Filter movies by title (partial match)'
+        required: false
+        example: Godfather
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      director:
+        custom: []
+        name: director
+        description: 'Filter movies by director name (partial match)'
+        required: false
+        example: Coppola
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      genre:
+        custom: []
+        name: genre
+        description: 'Filter movies by genre (exact match)'
+        required: false
+        example: Crime
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: 'Filter movies by availability status (available, unavailable, coming_soon)'
+        required: false
+        example: available
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      page: 1
+      per_page: 15
+      title: Godfather
+      director: Coppola
+      genre: Crime
+      status: available
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":[{"id":1,"title":"Enim beatae neque quis.","director":"Ms. Lenna Schimmel","description":"Molestiae optio est praesentium voluptas repellat. Quam ut nostrum ullam in aut.","studio":"Halvorson, Bauch and Nolan","release_date":"2012-07-03","language":"pt","duration":191,"genre":"Romance","rating":"7.4","price":"13.25","status":"unavailable","created_at":"2025-11-17T13:30:38+00:00","updated_at":"2025-11-17T13:30:38+00:00"},{"id":2,"title":"Et cumque blanditiis odit.","director":"Vaughn Fahey","description":"Eum delectus officiis quos aut laudantium consequatur nisi explicabo. Dignissimos mollitia quis eos repellendus. Asperiores recusandae animi ex ipsam.","studio":"Koelpin-Parisian","release_date":"1971-10-08","language":"es","duration":113,"genre":"Action","rating":"5.0","price":"8.19","status":"coming_soon","created_at":"2025-11-17T13:30:38+00:00","updated_at":"2025-11-17T13:30:38+00:00"}],"links":{"first":"\/?page=1","last":"\/?page=1","prev":null,"next":null},"meta":{"current_page":1,"from":1,"last_page":1,"links":[{"url":null,"label":"&laquo; Previous","page":null,"active":false},{"url":"\/?page=1","label":"1","page":1,"active":true},{"url":null,"label":"Next &raquo;","page":null,"active":false}],"path":"\/","per_page":15,"to":2,"total":2}}'
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
       - POST
     uri: api/movies
     metadata:
@@ -16,9 +129,10 @@ endpoints:
       subgroupDescription: ''
       title: 'Create a new movie'
       description: 'Add a new movie to the collection with all its details. Optionally upload a cover image (max 2MB, formats: jpeg, png, jpg, gif, webp).'
-      authenticated: false
+      authenticated: true
       deprecated: false
     headers:
+      Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
       Content-Type: multipart/form-data
       Accept: application/json
     urlParameters: []
@@ -176,11 +290,67 @@ endpoints:
       -
         custom: []
         status: 201
-        content: '{"message":"Movie created successfully","data":{"id":1,"title":"The Godfather","director":"Francis Ford Coppola"}}'
+        content: '{"data":{"id":3,"title":"Eius et animi.","director":"Rowan Gulgowski","description":"Nihil accusantium harum mollitia modi deserunt. Ab provident perspiciatis quo omnis nostrum aut adipisci. Nostrum qui commodi incidunt iure.","studio":"McLaughlin, Leuschke and Bauch","release_date":"1971-11-16","language":"pt","duration":105,"genre":"Drama","rating":"7.9","price":"27.18","status":"available","created_at":"2025-11-17T13:30:38+00:00","updated_at":"2025-11-17T13:30:38+00:00"}}'
         headers: []
         description: ''
     responseFields: []
-    auth: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/movies/{id}'
+    metadata:
+      custom: []
+      groupName: 'Movies Management'
+      groupDescription: 'APIs for managing movies in your collection. All endpoints support full CRUD operations with advanced filtering and pagination.'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get movie details'
+      description: 'Retrieve detailed information about a specific movie by its ID, including cover image if available.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the movie.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":{"id":4,"title":"Adipisci quidem nostrum qui.","director":"Miss Jazlyn Keebler III","description":"Ipsum nostrum omnis autem et consequatur aut dolores enim. Facere tempora ex voluptatem laboriosam. Quis adipisci molestias fugit deleniti distinctio eum.","studio":"Nitzsche-Ankunding","release_date":"1991-08-18","language":"es","duration":165,"genre":"Drama","rating":"1.7","price":"17.94","status":"unavailable","created_at":"2025-11-17T13:30:38+00:00","updated_at":"2025-11-17T13:30:38+00:00"}}'
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
     controller: null
     method: null
     route: null
@@ -198,9 +368,10 @@ endpoints:
       subgroupDescription: ''
       title: 'Update movie information'
       description: 'Update one or more fields of an existing movie. All fields are optional. If a new cover image is provided, the old one will be replaced.'
-      authenticated: false
+      authenticated: true
       deprecated: false
     headers:
+      Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
       Content-Type: multipart/form-data
       Accept: application/json
     urlParameters:
@@ -209,14 +380,14 @@ endpoints:
         name: id
         description: 'The ID of the movie.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
@@ -370,17 +541,14 @@ endpoints:
       -
         custom: []
         status: 200
-        content: '{"message":"Movie updated successfully","data":{"id":1,"title":"Updated Title"}}'
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 404
-        content: '{"message":"Movie not found"}'
+        content: '{"data":{"id":5,"title":"Eius et animi.","director":"Rowan Gulgowski","description":"Nihil accusantium harum mollitia modi deserunt. Ab provident perspiciatis quo omnis nostrum aut adipisci. Nostrum qui commodi incidunt iure.","studio":"McLaughlin, Leuschke and Bauch","release_date":"1971-11-16","language":"pt","duration":105,"genre":"Drama","rating":"7.9","price":"27.18","status":"available","created_at":"2025-11-17T13:30:38+00:00","updated_at":"2025-11-17T13:30:38+00:00"}}'
         headers: []
         description: ''
     responseFields: []
-    auth: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
     controller: null
     method: null
     route: null
@@ -397,9 +565,10 @@ endpoints:
       subgroupDescription: ''
       title: 'Delete a movie'
       description: 'Permanently remove a movie from the collection. This operation uses soft delete, so the movie can be restored if needed. Any associated cover image will also be deleted.'
-      authenticated: false
+      authenticated: true
       deprecated: false
     headers:
+      Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
       Content-Type: application/json
       Accept: application/json
     urlParameters:
@@ -408,34 +577,25 @@ endpoints:
         name: id
         description: 'The ID of the movie.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 204
-        content: '{"message":"Movie deleted successfully"}'
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 404
-        content: '{"message":"Movie not found"}'
-        headers: []
-        description: ''
+    responses: []
     responseFields: []
-    auth: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
     controller: null
     method: null
     route: null
