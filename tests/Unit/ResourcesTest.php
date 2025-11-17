@@ -8,8 +8,14 @@ use App\Models\Book;
 use App\Models\Movie;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function (): void {
+    // Garante que as rotas estão carregadas
+    Route::getRoutes()->refreshNameLookups();
+});
 
 it('transforms Book to BookResource', function (): void {
     $book = Book::factory()->create([
@@ -39,10 +45,10 @@ it('transforms Book to BookResource', function (): void {
         'cover',
         'created_at',
         'updated_at',
-    ]);
-    expect($array['title'])->toBe('Test Book');
-    expect($array['author'])->toBe('Test Author');
-    expect($array['isbn'])->toBe('978-3-16-148410-0');
+    ])
+        ->and($array['title'])->toBe('Test Book')
+        ->and($array['author'])->toBe('Test Author')
+        ->and($array['isbn'])->toBe('978-3-16-148410-0');
 });
 
 it('transforms Movie to MovieResource', function (): void {
@@ -72,9 +78,9 @@ it('transforms Movie to MovieResource', function (): void {
         'cover',
         'created_at',
         'updated_at',
-    ]);
-    expect($array['title'])->toBe('Test Movie');
-    expect($array['director'])->toBe('Test Director');
+    ])
+        ->and($array['title'])->toBe('Test Movie')
+        ->and($array['director'])->toBe('Test Director');
 });
 
 it('transforms Attachment to AttachmentResource', function (): void {
@@ -90,7 +96,7 @@ it('transforms Attachment to AttachmentResource', function (): void {
         'attachable_id' => $book->id,
     ]);
 
-    $resource = new AttachmentResource($attachment);
+    $resource = AttachmentResource::make($attachment);
     $request = Request::create('/api/attachments');
     $array = $resource->toArray($request);
 
@@ -102,11 +108,11 @@ it('transforms Attachment to AttachmentResource', function (): void {
         'file_size',
         'type',
         'created_at',
-    ]);
-    expect($array['file_name'])->toBe('test.jpg');
-    expect($array['mime_type'])->toBe('image/jpeg');
-    expect($array['file_size'])->toBe(1024);
-    expect($array['file_url'])->toContain('/api/attachments/');
+    ])
+        ->and($array['file_name'])->toBe('test.jpg')
+        ->and($array['mime_type'])->toBe('image/jpeg')
+        ->and($array['file_size'])->toBe(1024)
+        ->and($array['file_url'])->toContain('/api/attachments/');
 });
 
 it('BookResource includes attachment when cover is loaded', function (): void {
@@ -129,8 +135,12 @@ it('BookResource includes attachment when cover is loaded', function (): void {
     $array = $resource->toArray($request);
 
     expect($array['cover'])->not->toBeNull();
-    expect($array['cover'])->toHaveKey('file_name');
-    expect($array['cover']['file_name'])->toBe('cover.jpg');
+
+    // Converte o resource para array
+    $coverArray = $array['cover']->toArray($request);
+
+    expect($coverArray)->toHaveKey('file_name');
+    expect($coverArray['file_name'])->toBe('cover.jpg');
 });
 
 it('MovieResource includes attachment when cover is loaded', function (): void {
@@ -153,6 +163,10 @@ it('MovieResource includes attachment when cover is loaded', function (): void {
     $array = $resource->toArray($request);
 
     expect($array['cover'])->not->toBeNull();
-    expect($array['cover'])->toHaveKey('file_name');
-    expect($array['cover']['file_name'])->toBe('poster.jpg');
+
+    // Converte o resource para array
+    $coverArray = $array['cover']->toArray($request);
+
+    expect($coverArray)->toHaveKey('file_name');
+    expect($coverArray['file_name'])->toBe('poster.jpg');
 });

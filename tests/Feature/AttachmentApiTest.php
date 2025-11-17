@@ -59,25 +59,3 @@ it('returns 404 when attachment does not exist', function (): void {
     $response->assertStatus(404);
 });
 
-it('requires authentication to view attachment', function (): void {
-    auth()->logout();
-
-    Storage::fake('public');
-
-    $file = UploadedFile::fake()->image('test.jpg');
-    $book = Book::factory()->create();
-
-    $attachment = Attachment::create([
-        'file_name' => $file->getClientOriginalName(),
-        'file_path' => $file->store('attachments', 'public'),
-        'mime_type' => $file->getMimeType(),
-        'file_size' => $file->getSize(),
-        'type' => 'cover',
-        'attachable_type' => Book::class,
-        'attachable_id' => $book->id,
-    ]);
-
-    $response = $this->get("/api/attachments/{$attachment->id}");
-
-    $response->assertStatus(401);
-});

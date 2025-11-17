@@ -25,7 +25,7 @@ class BookResource extends JsonResource
             'genre' => $this->genre,
             'price' => $this->price,
             'status' => $this->status,
-            'cover' => new AttachmentResource($this->whenLoaded('cover')),
+            'cover' => AttachmentResource::make($this->whenLoaded('cover')),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

@@ -52,7 +52,7 @@ class AuthService
 
     public function logout(User $user): void
     {
-        $user->currentAccessToken()->delete();
+        $user->currentAccessToken()?->delete();
     }
 
     public function sendPasswordResetLink(string $email): string
